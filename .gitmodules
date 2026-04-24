@@ -1,0 +1,3 @@
+[submodule "b0mb"]
+	path = b0mb
+	url = git@github.com:dr0pz0n3/b0mb.git

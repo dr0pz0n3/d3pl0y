@@ -1,0 +1,59 @@
+services:
+    backend:
+      container_name: backend
+      restart: always
+      build: ./b0mb/
+      volumes:
+        - ./logs:/winston_logs
+      environment:
+        MONGO_URI: mongodb://b0mb:changeme@mongo:27017/b0mb?authSource=admin
+        REDIS_URI: redis://:changeme@redis:6379
+        JWT_SECRET_KEY: changeme
+        REFRESH_JWT_SECRET_KEY: changeme
+        ADMIN_USER: p4p1
+        ADMIN_PASSWORD: fe42c764b34c238fdda6abf3d4e405ca0f7ff45e3f0a5aa3081758fb46b2d955
+      ports:
+        - "127.0.0.1:8000:8000"
+        - "127.0.0.1:8001:8001"
+      networks:
+        - internal
+
+    mongo:
+      container_name: database
+      image: mongo:6
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: b0mb
+        MONGO_INITDB_ROOT_PASSWORD: changeme
+      volumes:
+        - ./mongo:/data/db
+      networks:
+        - internal
+
+    redis:
+      container_name: redis
+      image: "redis:alpine"
+      command: redis-server --requirepass changeme
+      volumes:
+        - ./redis:/data
+      networks:
+        - internal
+
+    admin_panel:
+      container_name: admin_panel
+      restart: always
+      image: mongo-express:1.0.0-alpha.4
+      ports:
+        - "127.0.0.1:8081:8081"
+      environment:
+        ME_CONFIG_BASICAUTH_USERNAME: root
+        ME_CONFIG_BASICAUTH_PASSWORD: toor
+        ME_CONFIG_MONGODB_ADMINUSERNAME: b0mb
+        ME_CONFIG_MONGODB_ADMINPASSWORD: changeme
+        ME_CONFIG_OPTIONS_EDITORTHEME: material
+        ME_CONFIG_MONGODB_SERVER: mongo
+      networks:
+        - internal
+
+networks:
+  internal:
+    driver: bridge
