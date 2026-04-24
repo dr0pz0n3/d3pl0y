@@ -1,3 +1,4 @@
 libs/
 mongo/
 redis/
+logs/
