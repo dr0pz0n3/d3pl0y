@@ -4,6 +4,7 @@ services:
       restart: always
       build: ./b0mb/
       volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
         - ./logs:/winston_logs
       environment:
         MONGO_URI: mongodb://b0mb:changeme@mongo:27017/b0mb?authSource=admin
