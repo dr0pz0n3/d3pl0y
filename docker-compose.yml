@@ -38,6 +38,43 @@ services:
       networks:
         - internal
 
+    nginx:
+      container_name: nginx
+      image: nginx:alpine
+      depends_on:
+        - backend
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - ./conf/certs:/etc/nginx/certs
+        - ./conf/nginx/b0mb.conf:/etc/nginx/conf.d/b0mb.conf
+        - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+        - ./f4k3:/usr/share/nginx/f4k3
+
+      networks:
+        - internal
+
+    stunnel:
+      container_name: stunnel
+      image: alpine
+      command: sh -c "apk add --no-cache stunnel && exec stunnel /etc/stunnel/stunnel.conf && tail -f /dev/null"
+      volumes:
+        - ./conf/stunnel:/etc/stunnel
+        - ./conf/certs:/etc/stunnel/certs
+      networks:
+        - internal
+
+    ovpn:
+      container_name: ovpn
+      image: kylemanna/openvpn
+      cap_add:
+        - NET_ADMIN
+      volumes:
+        - ./conf/ovpn:/etc/openvpn
+      networks:
+        - internal
+
     admin_panel:
       container_name: admin_panel
       restart: always

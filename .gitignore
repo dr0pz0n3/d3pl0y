@@ -1,3 +1,7 @@
+p4p1.ovpn
+f4k3/
+conf/certs/
+conf/ovpn/
 libs/
 mongo/
 redis/
