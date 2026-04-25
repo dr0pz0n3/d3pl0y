@@ -58,8 +58,8 @@ services:
 
     stunnel:
       container_name: stunnel
-      image: alpine
-      command: sh -c "apk add --no-cache stunnel && exec stunnel /etc/stunnel/stunnel.conf && tail -f /dev/null"
+      build: ./stunnel/
+      restart: always
       volumes:
         - ./conf/stunnel:/etc/stunnel
         - ./conf/certs:/etc/stunnel/certs

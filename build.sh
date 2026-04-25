@@ -11,6 +11,7 @@
 #
 CERTIFICATE_FOLDER=$PWD/conf/certs/
 OPENVPN_FOLDER=$PWD/conf/ovpn/
+OUT_FOLDER=$PWD/out/
 DEPLOY=
 
 function usage () {
@@ -30,6 +31,8 @@ function setup_certificates() {
 
 		sudo trust anchor --store $CERTIFICATE_FOLDER/b0mb.crt
 		sudo update-ca-trust
+		cp -r "$CERTIFICATE_FOLDER/b0mb.key" "$OUT_FOLDER"
+		cp -r "$CERTIFICATE_FOLDER/b0mb.crt" "$OUT_FOLDER"
 	else
 		#--deploy-hook "cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem $CERTIFICATE_FOLDER/b0mb.crt && \
         #       cp /etc/letsencrypt/live/$DOMAIN/privkey.pem $CERTIFICATE_FOLDER/b0mb.key && \
@@ -39,12 +42,29 @@ function setup_certificates() {
 }
 
 function setup_openvpn() {
+	echo -e "Enabling the vpn kernel modules -> \e[36m:)\e[0m"
+	sudo modprobe tun
+	sudo modprobe iptable_nat
 	[ -d "$OPENVPN_FOLDER" ] && return || mkdir -p $OPENVPN_FOLDER
 	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u tcp://stunnel.yourdomain.com
 	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki nopass
 	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full p4p1 nopass
 	echo -e "Generating operator .ovpn file in ./p4p1.ovpn -> \e[36m:)\e[0m"
-	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient p4p1 > ./p4p1.ovpn
+	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient p4p1 > "$OUT_FOLDER/p4p1.ovpn"
+}
+
+function generate_stunnel_conf() {
+	echo -e "Creating your operator stunnel setup -> \e[36m:)\e[0m"
+	cat << EOF > $OUT_FOLDER/stunnel.conf
+client = yes
+CAfile = /etc/stunnel/b0mb.crt
+verify = 2
+[openvpn]
+accept = 127.0.0.1:1194
+connect = stunnel.b0mb.local:443
+retry = yes
+EOF
+
 }
 
 while getopts "c" o; do
@@ -58,6 +78,8 @@ while getopts "c" o; do
 	esac
 done
 shift $((OPTIND-1))
+
+[ ! -d "$OUT_FOLDER" ] && mkdir -p $OUT_FOLDER
 
 while DEPLOY=$(echo -e "prod\ntesting" | fzf --prompt="Deployment: " --height=80% --layout=reverse --border=rounded --margin=20%,30% --padding=1 --header="Deployment mode"); do
 	if [ ! -z "$DEPLOY" ]; then
