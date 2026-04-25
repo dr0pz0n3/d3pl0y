@@ -3,6 +3,9 @@ services:
       container_name: backend
       restart: always
       build: ./b0mb/
+      depends_on:
+        - mongo
+        - redis
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - ./logs:/winston_logs
@@ -59,6 +62,10 @@ services:
     stunnel:
       container_name: stunnel
       build: ./stunnel/
+      ports:
+        - "127.0.0.1:1194:1194"
+      depends_on:
+        - ovpn
       restart: always
       volumes:
         - ./conf/stunnel:/etc/stunnel
@@ -68,9 +75,11 @@ services:
 
     ovpn:
       container_name: ovpn
-      image: kylemanna/openvpn
+      build: ./ovpn/
       cap_add:
         - NET_ADMIN
+      devices:
+        - /dev/net/tun:/dev/net/tun
       volumes:
         - ./conf/ovpn:/etc/openvpn
       networks:
@@ -80,6 +89,8 @@ services:
       container_name: admin_panel
       restart: always
       image: mongo-express:1.0.0-alpha.4
+      depends_on:
+        - mongo
       ports:
         - "127.0.0.1:8081:8081"
       environment:

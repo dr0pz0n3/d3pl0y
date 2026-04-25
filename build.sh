@@ -12,6 +12,7 @@
 CERTIFICATE_FOLDER=$PWD/conf/certs/
 OPENVPN_FOLDER=$PWD/conf/ovpn/
 OUT_FOLDER=$PWD/out/
+DEPENDENCY=(fzf docker openssl dialog tmux)
 DEPLOY=
 
 function usage () {
@@ -35,14 +36,18 @@ function setup_certificates() {
 		cp -r "$CERTIFICATE_FOLDER/b0mb.crt" "$OUT_FOLDER"
 	else
 		#--deploy-hook "cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem $CERTIFICATE_FOLDER/b0mb.crt && \
-        #       cp /etc/letsencrypt/live/$DOMAIN/privkey.pem $CERTIFICATE_FOLDER/b0mb.key && \
-        #       docker compose -f $PWD/docker-compose.yml restart"
+		#       cp /etc/letsencrypt/live/$DOMAIN/privkey.pem $CERTIFICATE_FOLDER/b0mb.key && \
+		#       docker compose -f $PWD/docker-compose.yml restart"
 		echo "in prod certbot here"
 	fi
 }
 
 function setup_openvpn() {
 	echo -e "Enabling the vpn kernel modules -> \e[36m:)\e[0m"
+	if [ "$DEPLOY" = "prod" ]; then
+		echo "tun" | sudo tee /etc/modules-load.d/tun.conf
+		echo "iptable_nat" | sudo tee /etc/modules-load.d/iptable_nat.conf
+	fi
 	sudo modprobe tun
 	sudo modprobe iptable_nat
 	[ -d "$OPENVPN_FOLDER" ] && return || mkdir -p $OPENVPN_FOLDER
@@ -102,5 +107,5 @@ setup_openvpn
 
 echo -e "Starting the compose -> \e[36m:)\e[0m"
 if [ "$DEPLOY" = "testing" ]; then
-    sudo docker compose -f $PWD/docker-compose.yml up --build
+	sudo docker compose -f $PWD/docker-compose.yml up --build
 fi
