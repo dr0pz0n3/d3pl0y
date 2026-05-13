@@ -8,16 +8,21 @@ services:
         - redis
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
+        - ./conf/certs:/certs
         - ./logs:/winston_logs
         - ./units:/units
       environment:
         VERBOSE: 'true'
+        DOMAIN: 'b0mb.local'
         MONGO_URI: mongodb://b0mb:changeme@mongo:27017/b0mb?authSource=admin
         UNITS_PATH: /units
         REDIS_URI: redis://:changeme@redis:6379
         JWT_SECRET_KEY: changeme
         REFRESH_JWT_SECRET_KEY: changeme
+        DOWNLOAD_JWT_SECRET_KEY: changeme
         ADMIN_USER: p4p1
+        XOR_CODE: 'b0mb'
+        CESAR_CODE: 123
         ADMIN_PASSWORD: fe42c764b34c238fdda6abf3d4e405ca0f7ff45e3f0a5aa3081758fb46b2d955
       ports:
         - "127.0.0.1:8000:8000"
@@ -66,7 +71,7 @@ services:
       container_name: stunnel
       build: ./stunnel/
       ports:
-        - "127.0.0.1:1194:1194"
+        - "127.0.0.1:8443:8443"
       depends_on:
         - ovpn
       restart: always
@@ -79,6 +84,8 @@ services:
     ovpn:
       container_name: ovpn
       build: ./ovpn/
+      ports:
+        - "127.0.0.1:1194:1194"
       cap_add:
         - NET_ADMIN
       devices:
