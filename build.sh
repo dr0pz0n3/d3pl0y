@@ -10,7 +10,6 @@
 # Description:
 #
 CERTIFICATE_FOLDER=$PWD/conf/certs/
-OPENVPN_FOLDER=$PWD/conf/ovpn/
 OUT_FOLDER=$PWD/out/
 DEPENDENCY=(fzf docker openssl dialog tmux)
 DEPLOY=
@@ -50,12 +49,6 @@ function setup_openvpn() {
 	fi
 	sudo modprobe tun
 	sudo modprobe iptable_nat
-	[ -d "$OPENVPN_FOLDER" ] && return || mkdir -p $OPENVPN_FOLDER
-	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u tcp://stunnel.yourdomain.com
-	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki nopass
-	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full p4p1 nopass
-	echo -e "Generating operator .ovpn file in ./p4p1.ovpn -> \e[36m:)\e[0m"
-	sudo docker run -v $PWD/conf/ovpn:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient p4p1 > "$OUT_FOLDER/p4p1.ovpn"
 }
 
 function generate_stunnel_conf() {
